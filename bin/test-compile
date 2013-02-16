@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# This is a script to simulate heroku's compile process locally, as much as possible
+# You'll have to customize it for your own machine (eg with ptrs to CCL and the Buildback)
+# See also bin/test-run
+
+# run in app repository directory (eg ~/repos/heroku-cl-example/)
+
+rm -rf /tmp/build
+# git clone -l . /tmp/build
+hg clone . /tmp/build
+
+# comment out this section to reuse the cache
+# rm -rf /tmp/cache
+# mkdir /tmp/cache
+# ln -s /misc/repos/ccl /tmp/cache/ccl
+
+cd /tmp/build
+~/repos/heroku-buildpack-cl/bin/compile /tmp/build /tmp/cache
