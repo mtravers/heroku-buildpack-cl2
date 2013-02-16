@@ -4,4 +4,6 @@ cat << EOF
 ---
 config_vars:
   PATH: /usr/bin:/bin
+default_process_types:
+  web: ./sbcl/sbcl-1.0.54-x86-64-linux/run-sbcl.sh --load heroku-release.lisp --eval "(loop (sleep 1000))"
 EOF
