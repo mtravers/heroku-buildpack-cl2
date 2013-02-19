@@ -17,8 +17,6 @@
 	(funcall (symbol-function (find-symbol "INSTALL" (find-package "QUICKLISP-QUICKSTART")))
 		 :path (make-pathname :directory (pathname-directory ql-setup))))))
 
-(asdf:clear-system "acl-compat")
-
 ;;; Load all .asd files in the repos subdirectory.  The compile script puts
 ;;; several systems in there, because we are using versions that are 
 ;;; different from those in Quicklisp. (update: Can't just load the files apparently,
@@ -31,22 +29,19 @@
     (push (make-pathname :directory d) asdf:*central-registry*)))
 
 ;;; App can redefine this to do runtime initializations
-(defun initialize-application ()
+(defun initialize-application (&key port)
   )
+
+(defvar *root* "/app")			;this is always the app root on Heroku now?
 
 ;;; Default toplevel, app can redefine.
 (defun heroku-toplevel ()
-  (initialize-application)
-  ;; Start the web server
-  (let ((port (parse-integer (getenv "PORT"))))
-    (format t "Listening on port ~A~%" port)
-    (funcall (symbol-function (find-symbol "START" (find-package "NET.ASERVE")))
-	     :port port)
-    (loop (sleep 60))			;sleep forever
-    ))
+  (initialize-application :port (parse-integer (getenv "PORT")))
+  (loop (sleep 60))			;sleep forever
+  )
 
 ;;; Load the application from sources
-(load (make-pathname :directory *build-dir* :defaults "heroku-setup.lisp"))
+(load (make-pathname :directory *build-dir* :defaults "heroku-compile.lisp"))
 
 ;;; Save the application as an image
 (let ((app-file (format nil "~A/lispapp" (getenv "BUILD_DIR")))) ;must match path specified in bin/release

@@ -46,31 +46,6 @@ echo "ccl installed" | indent
 
 # setting up paths for building
 
-echo "-----> Getting patched versions of libraries"
-
-mkdir $CACHE_DIR/repos		# should be under an if to avoid error
-pushd $CACHE_DIR/repos
-
-if [ -d $CACHE_DIR/repos/portableaserve ]; then
-     echo 'aserve already present'
-     pushd portableaserve
-     git pull origin master
-     popd
-else 
-    git clone git://github.com/mtravers/portableaserve.git
-fi
-
-if [ -d $CACHE_DIR/repos/wuwei ]; then
-     echo 'wuwei already present'
-     pushd wuwei
-     git pull origin master
-     popd
-else 
-    git clone git://github.com/mtravers/wuwei.git
-fi
-
-popd
-
 export BUILDPACK_DIR
 export CACHE_DIR
 export BUILD_DIR

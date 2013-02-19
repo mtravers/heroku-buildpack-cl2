@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # this pack is valid for apps with a heroku-setup.lisp in the root
-if [ -f $1/heroku-setup.lisp ]; then
+if [ -f $1/heroku-compile.lisp ]; then
   echo "CLFramework"
   exit 0
 else
