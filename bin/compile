@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # bin/compile <build-dir> <cache-dir>
 
+mktmpdir() {
+  dir=$(mktemp -t node-$1-XXXX)
+  rm -rf $dir
+  mkdir -p $dir
+  echo $dir
+}
 function indent() {
   c='s/^/       /'
   case $(uname) in
@@ -8,6 +14,10 @@ function indent() {
     *)      sed -u "$c";;
   esac
 }
+
+# 
+S3_BUCKET="cl-heroku"
+CCL_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/ccl-1.7.tgz"
 
 # parse and derive params
 BUILDPACK_DIR=$(cd $(dirname $0); cd ..; pwd) # absolute path of buildpack
@@ -21,22 +31,54 @@ if [ $RESET_CACHE ]; then
   rm -rf $CACHE_DIR/*
 fi
 
-if [ ! -d "$CACHE_DIR/sbcl/sbcl-1.0.54-x86-64-linux" ]; then
-    echo "-----> Fetching sbcl"    
-    SBCL_PACKAGE="http://sbcl-heroku.s3.amazonaws.com/sbcl-1.0.54-x86-64-linux-binary.tar.bz2"
-    mkdir -p "$CACHE_DIR/sbcl" && curl $SBCL_PACKAGE -s -o -  | tar xjf - -C "$CACHE_DIR/sbcl"
-    chmod +x "$CACHE_DIR/sbcl/sbcl-1.0.54-x86-64-linux/run-sbcl.sh"
+CCL_DIR="$CACHE_DIR/ccl"
+
+echo "-----> Installing ccl"
+if [ ! -d $CCL_DIR ]; then
+    echo "-----> Fetching ccl"
+    mkdir -p $CCL_DIR  && curl $CCL_PACKAGE -s -o -  | tar xzf - -C $CCL_DIR
 fi
+
 # add to slug 
-cp -r "$CACHE_DIR/sbcl" $BUILD_DIR
-echo "sbcl installed" | indent
+cp -r $CCL_DIR $BUILD_DIR
+
+echo "ccl installed" | indent
 
 # setting up paths for building
+
+echo "-----> Getting patched versions of libraries"
+
+mkdir $CACHE_DIR/repos		# should be under an if to avoid error
+pushd $CACHE_DIR/repos
+
+if [ -d $CACHE_DIR/repos/portableaserve ]; then
+     echo 'aserve already present'
+     pushd portableaserve
+     git pull origin master
+     popd
+else 
+    git clone git://github.com/mtravers/portableaserve.git
+fi
+
+if [ -d $CACHE_DIR/repos/wuwei ]; then
+     echo 'wuwei already present'
+     pushd wuwei
+     git pull origin master
+     popd
+else 
+    git clone git://github.com/mtravers/wuwei.git
+fi
+
+popd
 
 export BUILDPACK_DIR
 export CACHE_DIR
 export BUILD_DIR
+export CCL_DEFAULT_DIRECTORY=$CCL_DIR
 
 echo "-----> Starting build"
-$BUILD_DIR/sbcl/sbcl-1.0.54-x86-64-linux/run-sbcl.sh --load "$BUILDPACK_DIR/bin/compile.lisp" --eval "(sb-ext:quit)"
+$CCL_DEFAULT_DIRECTORY/scripts/ccl64 -l "$BUILDPACK_DIR/setup/compile.lisp"
 echo "-----> Build finished"
+
+chmod a+x $BUILD_DIR/lispapp
+
