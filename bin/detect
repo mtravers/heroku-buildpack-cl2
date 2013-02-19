@@ -1,5 +1,10 @@
 #!/bin/sh
 
+pwd
+ls
+echo $1
+ls $1
+
 # this pack is valid for apps with a heroku-compile.lisp in the root
 if [ -f $1/heroku-compile.lisp ]; then
   echo "CLFramework"
