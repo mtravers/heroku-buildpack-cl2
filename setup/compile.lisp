@@ -4,6 +4,10 @@
 (defvar *cache-dir* (pathname-directory (pathname (concatenate 'string (getenv "CACHE_DIR") "/"))))
 (defvar *buildpack-dir* (pathname-directory (pathname (concatenate 'string (getenv "BUILDPACK_DIR") "/"))))
 
+(format t "~%*build-dir* = ~%" *build-dir*)
+(format t "~%*cache-dir* = ~%" *cache-dir*)
+(format t "~%*buildpack-dir* = ~%" *buildpack-dir*)
+
 ;;; Tell ASDF to store binaries in the cache dir
 (ccl:setenv "XDG_CACHE_HOME" (concatenate 'string (getenv "CACHE_DIR") "/.asdf/"))
 
@@ -26,6 +30,7 @@
 				       :type "asd")))
        (directories (remove-duplicates (mapcar #'pathname-directory asds) :test #'equal)))
   (dolist (d directories)
+    (format t "~%~A added to asdf registry" d)
     (push (make-pathname :directory d) asdf:*central-registry*)))
 
 ;;; App can redefine this to do runtime initializations
